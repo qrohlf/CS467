@@ -1,0 +1,1 @@
+you need to include FPT.h BEFORE D3d_matrix.h  to avoid a strange bug
