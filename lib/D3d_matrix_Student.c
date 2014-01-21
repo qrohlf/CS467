@@ -370,5 +370,56 @@ int D3d_mat_mult_points (double *X, double *Y, double *Z,
   return 1 ;
 }
 
+int D3d_make_movement_sequence_matrix (
+                              double mat[4][4],
+                              double inv[4][4],
+                              int num_movements,
+                              int *movement_type_list,
+                              double *parameter_list ) {
+  D3d_make_identity(mat);
+  D3d_make_identity(inv);
+  for (int i=0; i<num_movements; i++) {
+    switch(movement_type_list[i]) {
+      case SX:
+        D3d_scale(mat, inv, parameter_list[i], 1, 1);
+        break;
+      case SY:
+        D3d_scale(mat, inv, 1, parameter_list[i], 1);
+        break;
+      case SZ:
+        D3d_scale(mat, inv, 1, 1, parameter_list[i]);
+        break;
+      case RX:
+        D3d_rotate_x(mat, inv, parameter_list[i]*M_PI/180);
+        break;
+      case RY:
+        D3d_rotate_y(mat, inv, parameter_list[i]*M_PI/180);
+        break;
+      case RZ:
+        D3d_rotate_z(mat, inv, parameter_list[i]*M_PI/180);
+        break;
+      case TX:
+        D3d_translate(mat, inv, parameter_list[i], 0, 0);
+        break;
+      case TY:
+        D3d_translate(mat, inv, 0, parameter_list[i], 0);
+        break;
+      case TZ:
+        D3d_translate(mat, inv, 0, 0, parameter_list[i]);
+        break;
+      case NX:
+        D3d_negate_x(mat, inv);
+        break;
+      case NY:
+        D3d_negate_y(mat, inv);
+        break;
+      case NZ:
+        D3d_negate_z(mat, inv);
+        break;
+    }
+  }
+  return 1;
+}
+
 
 
