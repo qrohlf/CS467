@@ -1,0 +1,1 @@
+acom -I./lib lib/D3d_matrix_Student.c examples/stickman_with_matricesA.c

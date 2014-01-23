@@ -1,1 +1,0 @@
-acom -I./lib lib/D3d_matrix_Student.c stickman_with_matricesA.c

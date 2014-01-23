@@ -370,6 +370,56 @@ int D3d_mat_mult_points (double *X, double *Y, double *Z,
   return 1 ;
 }
 
+int D3d_mat_mult_pt (double P[3],
+                     double m[4][4],
+                     double Q[3])
+// multiplies a SINGLE point by a matrix
+// | P[0] |       | Q[0] |
+// | P[1] | = m * | Q[1] |
+// | P[2] |       | Q[2] |
+// |  1   |       |  1   |
+
+// SAFE, user may make a call like 
+// D3d_mat_mult_pt (q,  m,q) ;
+{
+  double u,v,w ;
+
+  u = m[0][0]*Q[0] + m[0][1]*Q[1] + m[0][2]*Q[2] + m[0][3] ;
+  v = m[1][0]*Q[0] + m[1][1]*Q[1] + m[1][2]*Q[2] + m[1][3] ;
+  w = m[2][0]*Q[0] + m[2][1]*Q[1] + m[2][2]*Q[2] + m[2][3] ;
+
+  P[0] = u ;
+  P[1] = v ;
+  P[2] = w ;
+
+  return 1 ;
+
+}
+
+
+
+
+
+int D3d_x_product (double res[3], double a[3], double b[3])
+// res = a x b  , cross product of two vectors
+// SAFE: it is ok to make a call such as
+// D3d_x_product (a,  a,b) or
+// D3d_x_product (b,  a,b) or
+// D3d_x_product (a,  a,a) 
+{
+    double r[3] ;
+    
+    r[0] = a[1]*b[2] - b[1]*a[2] ;
+    r[1] = b[0]*a[2] - a[0]*b[2] ;
+    r[2] = a[0]*b[1] - b[0]*a[1] ;
+
+    res[0] = r[0] ;
+    res[1] = r[1] ;
+    res[2] = r[2] ;
+
+    return 1 ;
+}
+
 int D3d_make_movement_sequence_matrix (
                               double mat[4][4],
                               double inv[4][4],
@@ -416,10 +466,236 @@ int D3d_make_movement_sequence_matrix (
       case NZ:
         D3d_negate_z(mat, inv);
         break;
+      default:
+        return -1;
     }
   }
   return 1;
 }
+
+
+int D3d_viewAA (double view[4][4],  double view_inverse[4][4],
+                double eye_x, double eye_y, double eye_z ,
+                double coi_x, double coi_y, double coi_z ,
+                double up_x,  double up_y,  double up_z,
+                double a, double b, double c, double p, double r )
+// return 1 if successful, 0 otherwise
+{
+    double t[4][4],rx[4][4],ry[4][4],rz[4][4] ;
+    double pr1[4][4], pr2[4][4] ;
+    double ups ;
+    double up[3] ;
+
+    if ((p == 0) || (r == 0)) return 0 ;
+
+
+    // build the translation matrix     
+    D3d_make_identity(t) ;
+    t[0][3] = -eye_x ;
+    t[1][3] = -eye_y ;
+    t[2][3] = -eye_z ;
+
+    // build the rotation about y-axis matrix     
+    D3d_make_identity(ry) ;
+    ry[0][0] = ry[2][2] = c/p ; 
+    ry[2][0] = a/p ;
+    ry[0][2] = -ry[2][0] ;
+
+    // build the rotation about x-axis matrix     
+    D3d_make_identity(rx) ;
+    rx[1][1] = rx[2][2] = p/r ; 
+    rx[2][1] = b/r ;
+    rx[1][2] = -rx[2][1] ;
+
+    // build partial pipeline 
+
+    D3d_mat_mult(pr1,  ry,t) ;
+    D3d_mat_mult(pr2,  rx,pr1) ;
+
+
+    // build the rotation about z-axis matrix     
+    up[0] = up_x ; up[1] = up_y ; up[2] = up_z ; 
+    D3d_mat_mult_pt (up, pr2, up) ;
+    ups = sqrt(up[0]*up[0] + up[1]*up[1]) ;
+
+    if (ups == 0) return 0 ;
+
+    D3d_make_identity(rz) ;
+    rz[0][0] = rz[1][1] = up[1]/ups ;
+    rz[1][0] = up[0]/ups ;
+    rz[0][1] = -rz[1][0] ;
+
+    // finish pipeline 
+    D3d_mat_mult(view,  rz,pr2) ;
+
+    // now construct the inverse 
+
+    t[0][3] *= (-1) ;
+    t[1][3] *= (-1) ;
+    t[2][3] *= (-1) ;
+
+    ry[2][0] *= (-1) ;
+    ry[0][2] *= (-1) ;
+
+    rx[2][1] *= (-1) ;
+    rx[1][2] *= (-1) ;
+
+    rz[1][0] *= (-1) ;
+    rz[0][1] *= (-1) ;
+
+    D3d_mat_mult(pr1,   rx,rz) ;
+    D3d_mat_mult(pr2,   ry,pr1) ;
+    D3d_mat_mult(view_inverse,  t,pr2) ;  
+
+
+    return 1 ;
+}
+
+
+
+
+
+
+
+
+int D3d_viewBB (double view[4][4],  double view_inverse[4][4],
+                double eye_x, double eye_y, double eye_z ,
+                double coi_x, double coi_y, double coi_z ,
+                double up_x,  double up_y,  double up_z,
+                double a, double b, double c, double p, double r )
+// return 1 if successful, 0 otherwise
+{
+    double t[4][4],rx[4][4],ry[4][4],rz[4][4] ;
+    double pr1[4][4], pr2[4][4] ;
+    double ups ;
+    double up[3] ;
+
+    p = sqrt(b*b + c*c) ; // alter the incoming p
+
+    if ((p == 0) || (r == 0)) return 0 ;
+
+
+    // build the translation matrix     
+    D3d_make_identity(t) ;
+    t[0][3] = -eye_x ;
+    t[1][3] = -eye_y ;
+    t[2][3] = -eye_z ;
+
+
+    // build the rotation about x-axis matrix     
+    D3d_make_identity(rx) ;
+    rx[1][1] = rx[2][2] = c/p ; 
+    rx[2][1] = b/p ;
+    rx[1][2] = -rx[2][1] ;
+
+
+    // build the rotation about y-axis matrix     
+    D3d_make_identity(ry) ;
+    ry[0][0] = ry[2][2] = p/r ; 
+    ry[2][0] = a/r ;
+    ry[0][2] = -ry[2][0] ;
+
+
+    // build partial pipeline 
+
+    D3d_mat_mult(pr1,  rx,t) ;
+    D3d_mat_mult(pr2,  ry,pr1) ;
+
+
+    // build the rotation about z-axis matrix     
+    // remember you still want up to finally reside in the Y-Z plane to be 
+    // consistent 
+
+    up[0] = up_x ; up[1] = up_y ; up[2] = up_z ; 
+    D3d_mat_mult_pt (up, pr2, up) ;
+    ups = sqrt(up[0]*up[0] + up[1]*up[1]) ;
+
+    if (ups == 0) return 0 ;
+
+    D3d_make_identity(rz) ;
+    rz[0][0] = rz[1][1] = up[1]/ups ;
+    rz[1][0] = up[0]/ups ;
+    rz[0][1] = -rz[1][0] ;
+
+    // finish pipeline 
+    D3d_mat_mult(view,  rz,pr2) ;
+
+    // now construct the inverse 
+
+    t[0][3] *= (-1) ;
+    t[1][3] *= (-1) ;
+    t[2][3] *= (-1) ;
+
+    ry[2][0] *= (-1) ;
+    ry[0][2] *= (-1) ;
+
+    rx[2][1] *= (-1) ;
+    rx[1][2] *= (-1) ;
+
+    rz[1][0] *= (-1) ;
+    rz[0][1] *= (-1) ;
+
+    D3d_mat_mult(pr1,   ry,rz) ;
+    D3d_mat_mult(pr2,   rx,pr1) ;
+    D3d_mat_mult(view_inverse,  t,pr2) ;  
+
+    return 1 ;
+}
+        
+
+
+
+
+
+
+
+
+int D3d_view (double view[4][4],  double view_inverse[4][4],
+              double eye[3], double coi[3], double up[3]) 
+// Construct the view matrix and its inverse given the location
+// of the eye, the center of interest, and an up point.
+// return 1 if successful, 0 otherwise.
+{
+    double a,b,c,p,r ;
+    int s ;
+
+
+    //printf("entering D3d_view\n") ;
+    a = coi[0] - eye[0] ;
+    b = coi[1] - eye[1] ;
+    c = coi[2] - eye[2] ;
+    p = sqrt(a*a + c*c) ;
+    r = sqrt(a*a + b*b + c*c) ;
+
+    //printf("a,b,c,p,r = %lf %lf %lf %lf %lf\n\n",a,b,c,p,r) ;
+
+    if (fabs(b) < p) {
+      //      printf("choose AA\n") ;
+         s = D3d_viewAA (view, view_inverse,
+                         eye[0], eye[1], eye[2],
+                         coi[0], coi[1], coi[2],
+                         up[0],  up[1],  up[2],
+                         a,b,c,p,r) ;
+
+    } else {
+      //  printf("choose BB\n") ;
+          s = D3d_viewBB (view, view_inverse,
+                          eye[0], eye[1], eye[2],
+                          coi[0], coi[1], coi[2],
+                          up[0],  up[1],  up[2],
+                          a,b,c,p,r) ;
+
+    }
+
+
+    if (s == 0) printf("D3d_view error\n") ;
+
+    //printf("leaving D3d_view\n") ;
+
+    return s ;
+}
+
+
 
 
 
