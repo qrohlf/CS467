@@ -3,7 +3,7 @@
 
 // Constants
 
-    double h = .001;
+double h = .001;
 
 void circle(double p[3], double u) {
     p[0] = cos(u);
@@ -58,7 +58,16 @@ void unit_vector(double a[3], double b[3]) {
     b[2] = a[2]/m;
 }
 
-//Gives slope vector for function
+double R = .5, G = .5, B = .5;
+
+void color() {
+    R += .15; if (R>1) R -= 1;
+    G += .27; if (G>1) G -= .7;
+    B += .1; if (B>1) B -= .7;
+    G_rgb(R, G, B);
+}
+
+//Gives slope vector for function, with matrix m applied
 void slope(void (*func)(double[3], double), double m[4][4], double u, double vec[3]) {
     double p[3];
     double x1, y1, x2, y2;
@@ -84,18 +93,9 @@ void graph_normals(void (*func)(double[3], double), double m[4][4], double start
         (*func)(p, u);
         D3d_mat_mult_pt(p, m, p);
         slope(func, m, u, vec);
-
-        //unit_vector(vec, vec);
-
-        // D3d_make_identity(mat);
-        // D3d_translate(mat, minv, -p[0], -p[1], -p[2]);
-        // D3d_rotate_z(mat, minv, -M_PI/2.0);
-        // D3d_translate(mat, minv, p[0], p[1], p[2]);
-        // D3d_mat_mult_pt(vec, mat, vec);
-
         unit_vector(vec, vec);
 
-        
+        //Swap the x and y components and negate x to get a perpindicular vector to vec.
         G_line(p[0], p[1], p[0]+vec[1]*30, p[1]-vec[0]*30);
     }
 }
@@ -107,20 +107,19 @@ void graph(void (*func)(double[3], double), double m[4][4], double start, double
         D3d_mat_mult_pt(p, m, p);
         G_point(p[0], p[1]);
     }
-    graph_normals(func, m, start, end, interval*20);
+    graph_normals(func, m, start, end, interval*100);
 }
 
 int main(int argc, char const *argv[]) {
     G_init_graphics(800, 800);
     G_rgb(0, 0, 0);
     G_clear();
-    G_rgb(1, 1, 1);
-    //circle();
     double m[4][4], minv[4][4] ;
     int num ;
     int tlist[100] ;
     double plist[100] ;
 
+    color();
   //////////////////////////////////////////////
   //circle 
     tlist[num] = SX ; plist[num] = 50 ; num++ ;
@@ -129,8 +128,9 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =  500 ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&circle, m, 0.25*M_PI, 1.50*M_PI, 0.01);
+    graph(&circle, m, 0.25*M_PI, 1.50*M_PI, 0.001);
 
+    color();
   //////////////////////////////////////////////
   //sum4 
     num = 0;
@@ -140,9 +140,9 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =  300 ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&sum4, m, 0.50*M_PI, 1.75*M_PI, 0.01);
+    graph(&sum4, m, 0.50*M_PI, 1.75*M_PI, 0.001);
 
-
+    color();
   //////////////////////////////////////////////
   //square
     num = 0;
@@ -152,8 +152,9 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =  500 ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&square, m, 0, 2.0*M_PI, 0.01);
+    graph(&square, m, 0, 2.0*M_PI, 0.001);
 
+    color();
   //////////////////////////////////////////////
   //astroid
     num = 0;
@@ -164,8 +165,9 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =  300 ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&astroid, m, 0, 2.0*M_PI, 0.01);
+    graph(&astroid, m, 0, 2.0*M_PI, 0.001);
 
+    color();
   //////////////////////////////////////////////
   //hyperbola  {right branch}
     num = 0;
@@ -177,8 +179,9 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =   250.0  ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&hyperbola, m, -1, 2, 0.01);
+    graph(&hyperbola, m, -1, 2, 0.001);
 
+    color();
   //////////////////////////////////////////////
   //parabola
     num = 0;
@@ -189,8 +192,9 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =   250.0  ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&parabola, m, -1, 2, 0.01);
+    graph(&parabola, m, -1, 2, 0.001);
 
+    color();
   //////////////////////////////////////////////
   //lemon
     num = 0;
@@ -201,7 +205,7 @@ int main(int argc, char const *argv[]) {
     tlist[num] = TY ; plist[num] =  150 ; num++ ;
 
     D3d_make_movement_sequence_matrix(m,minv, num, tlist, plist) ;
-    graph(&lemon, m, 0, 2.0*M_PI, 0.01);
+    graph(&lemon, m, 0, 2.0*M_PI, 0.001);
 
 
     G_wait_key();
