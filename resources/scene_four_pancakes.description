@@ -1,0 +1,114 @@
+
+
+  int Tn, Ttypelist[100] ;
+  double Tvlist[100] ;
+
+
+
+  // eyespace 
+  degrees_of_half_angle = 80-2*frame_number ;
+
+  eye[0] = 0 ;
+  eye[1] = 0 ;
+  eye[2] = 0 ;
+
+  coi[0] = 0 ;
+  coi[1] = 0 ;
+  coi[2] = 1 ;
+
+  up[0] =  0 ;
+  up[1] =  1 ; 
+  up[2] =  0 ;
+
+  // position of light
+  pos[0] = 100 ; pos[1] = 200 ; pos[2] = -50 ;
+  amb  = 0.2 ;
+  diff = 0.5 ;
+  spow = 80 ;
+
+
+
+
+  //////////////////////////////////////////////
+  // unit sphere
+
+  Tn = 0 ; // number of transformations
+  Ttypelist[Tn] = SX ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = SY ; Tvlist[Tn] =   10    ; Tn++ ;
+  Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+  Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+  D3d_make_movement_sequence_matrix (
+               Mat[numobjects],
+               Imat[numobjects],
+               Tn,
+               Ttypelist,
+               Tvlist) ;
+
+  // color 0.00, 0.00, 1.00
+
+  ////////////////////////////////////////////////////
+  // unit sphere
+
+  Tn = 0 ; // number of transformations
+  Ttypelist[Tn] = SX ; Tvlist[Tn] =   10    ; Tn++ ;
+  Ttypelist[Tn] = SY ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = RY ; Tvlist[Tn] =    0    ; Tn++ ;
+  Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+  Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+  D3d_make_movement_sequence_matrix (
+               Mat[numobjects],
+               Imat[numobjects],
+               Tn,
+               Ttypelist,
+               Tvlist) ;
+
+  // color 0.00, 1.00, 0.25
+
+  ////////////////////////////////////////////////////
+  // unit sphere
+
+  Tn = 0 ; // number of transformations
+  Ttypelist[Tn] = SX ; Tvlist[Tn] =   10    ; Tn++ ;
+  Ttypelist[Tn] = SY ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = RY ; Tvlist[Tn] =   60    ; Tn++ ;
+
+  Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+  Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+  D3d_make_movement_sequence_matrix (
+               Mat[numobjects],
+               Imat[numobjects],
+               Tn,
+               Ttypelist,
+               Tvlist) ;
+
+
+  // color 1.00, 1.00, 1.00
+
+  ////////////////////////////////////////////////////
+  // unit sphere
+
+  Tn = 0 ; // number of transformations
+  Ttypelist[Tn] = SX ; Tvlist[Tn] =   10    ; Tn++ ;
+  Ttypelist[Tn] = SY ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+  Ttypelist[Tn] = RY ; Tvlist[Tn] =  120    ; Tn++ ;
+  Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+  Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+  D3d_make_movement_sequence_matrix (
+               Mat[numobjects],
+               Imat[numobjects],
+               Tn,
+               Ttypelist,
+               Tvlist) ;
+
+
+  // color 1.00, 0.00, 1.00
+
+  ////////////////////////////////////////////////////
