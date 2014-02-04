@@ -115,7 +115,7 @@ int main(int argc, char const *argv[]) {
     G_rgb(0, 0, 0);
     G_clear();
     double m[4][4], minv[4][4] ;
-    int num ;
+    int num = 0;
     int tlist[100] ;
     double plist[100] ;
 
