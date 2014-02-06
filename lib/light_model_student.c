@@ -1,4 +1,4 @@
-
+#include <math.h>
 
 double light_in_eye_space[3] ;
 double AMBIENT      = 0.2 ;
