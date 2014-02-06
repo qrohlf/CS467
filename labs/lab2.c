@@ -1,7 +1,9 @@
 #include <FPT.h>
+#include <pi.h>
 #include <D3d_matrix.h>
 #include <limits.h>
 #include <vectors.h>
+#include <light_model_student.h>
 
 
 
@@ -11,27 +13,9 @@ double Z_BUF[600][600];
 double fov;
 double R, G, B;
 
-// Globals from light model
-extern double light_in_eye_space[3] ;
-extern double AMBIENT;
-extern double MAX_DIFFUSE;
-extern double SPECPOW;
-
 
 // Equation for a sphere
 void sphere(double p[3], double u, double v) {
-    /*
-    Sphere: 
-    x^2+y^2+z^2-1=0
-
-    Parametric form:
-    x = cos(u)*cos(v)
-    y = sin(u)
-    z = cos(u)*sin(v)
-
-    u from 0 to 2pi
-    v from -pi/2 to pi/2
-    */
     p[0] = cos(u)*cos(v);
     p[1] = sin(u);
     p[2] = cos(u)*sin(v);
@@ -87,7 +71,7 @@ void graph_sphere(double m[4][4], double interval) {
     double irgb[3] = {R, G, B};     // Inherent color of object
     double argb[3];                 // Actual color of object
     double s[3] = {0, 0, 0};        // "s = location of start of ray"
-    double n[3];               // normal vector
+    double n[3];                    // normal vector
     for (double u=0; u<M_PI*2.0; u+=interval) {
         for (double v= -M_PI/2.0; v<M_PI/2.0; v+=interval) {
             sphere(p, u, v);
@@ -95,7 +79,7 @@ void graph_sphere(double m[4][4], double interval) {
             normal(&sphere, m, u, v, n);
             nu_light_model(irgb, s, p, n, argb);
             G_rgb(argb[0], argb[1], argb[2]);
-            // printf("u: %f v: %f x: %f y: %f z: %f ", u, v, p[0], p[1], p[2]);
+
             flatten(p);
             // check the z-buffer
             // printf("previous z-val at %d %d: %f\n", (int)p[0], (int)p[1], Z_BUF[(int)p[0]][(int)p[1]]);
@@ -106,11 +90,9 @@ void graph_sphere(double m[4][4], double interval) {
                 // draw stuff
                 G_point(p[0], p[1]);
             };
-            
-            // printf("x': %f y': %f \n", u, v, p[0], p[1], p[2]);
         }
     }
-    set_color(R, G, B); //Reset the color to what it was before the light model
+    set_color(R, G, B); //Reset the color to what it was before the graphing
 }
 
 int main(int argc, char const *argv[]) {
