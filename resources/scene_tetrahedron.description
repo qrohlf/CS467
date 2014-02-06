@@ -1,0 +1,100 @@
+
+#include <everything.h>
+
+// tetrahedron model
+
+void path (int frame_number, double path_xyz[3])
+{
+  double u,v,r ;
+  double x,y,z ;
+
+  u = 5*frame_number*M_PI/180 ;
+  v = 0.3*u ;
+  r = 2.0 + 1.4*sin(u) ;
+
+  x = r*cos(u)*cos(v) ;
+  y = r*sin(u) ;
+  z = r*cos(u)*sin(v) ;
+ 
+  path_xyz[0] = x ;
+  path_xyz[1] = y ;
+  path_xyz[2] = z ;
+
+}
+
+
+
+
+int init_scene (int frame_number)
+{
+  // model variables
+  double xcen[4],ycen[4],zcen[4],brad ; // four nodes of tetrahedron
+  double ccx,ccy,ccz,ccr ; // location of center of center sphere and radius
+
+  double degrees_of_half_angle ;
+  double eye[3],coi[3],up[3] ;
+  double light_position[3], amb, diff, spow ;
+
+
+  //////////////////////////////////////////////
+  //////////////////////////////////////////////
+  // build a ball and stick model of a tetrahedron
+  //////////////////////////////////////////////
+  //////////////////////////////////////////////
+  // 3 equally spaced pts around unit circle in the xz-plane 
+  // form the base
+  
+  for (k = 0 ; k < 3 ; k++) {
+    theta = 2*M_PI*k/3 ;
+    xcen[k] = cos(theta) ;
+    ycen[k] = 0 ;
+    zcen[k] = sin(theta) ;
+  }
+
+  // you figure where the 4th node of the regular tetrahedron
+  // xcen[3] = ? ; ycen[3] = ? ; zcen[3] = ? ;
+
+  // also, figure out location of the 5th node of the model
+  // which is at the center of mass of the tetrahedron
+  // ccx = ? ; ccy = ? ; ccz = ? ;
+
+
+  brad = 0.08 ; // radius of the 4 verts of the tetrahedron
+  ccr  = 0.20 ; // the radius of the center node of the model
+
+
+  ////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////
+
+  degrees_of_half_angle = 25 ;
+
+  path (frame_number, eye) ;
+
+  coi[0] = ccx ;
+  coi[1] = ccy ;
+  coi[2] = ccz ;
+
+  path (frame_number + 1, up) ;
+
+  printf("eye = %lf %lf %lf\n",eye[0],eye[1],eye[2]) ;
+  printf("coi = %lf %lf %lf\n",coi[0],coi[1],coi[2]) ;
+  printf("up  = %lf %lf %lf\n",up[0],up[1],up[2]) ;
+
+
+  //////////////////////////////////////////////
+  //////////////////////////////////////////////
+
+
+  path (frame_number + 10, light_position) ;
+  amb  = 0.2 ;
+  diff = 0.5 ;
+  spow = 80 ;
+
+
+
+  // etcetera
+
+
+}
+
+
