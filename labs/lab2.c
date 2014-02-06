@@ -6,7 +6,6 @@
 #include <light_model_student.h>
 
 
-
 // Globals
 double h = .001;
 double Z_BUF[600][600];
@@ -34,7 +33,7 @@ void normal(void (*func)(double[3], double, double), double m[4][4], double u, d
     x1 = p[0]; y1 = p[1]; z1 = p[2];
     (*func)(p, u+.001, v);
     D3d_mat_mult_pt(p, m, p);
-    x2 = p[0]; y2 = p[2]; z2 = p[2];
+    x2 = p[0]; y2 = p[1]; z2 = p[2];
     uvec[0] = x2-x1;
     uvec[1] = y2-y1;
     uvec[2] = z2-z1;
@@ -45,7 +44,7 @@ void normal(void (*func)(double[3], double, double), double m[4][4], double u, d
     x1 = p[0]; y1 = p[1]; z1 = p[2];
     (*func)(p, u, v+.001);
     D3d_mat_mult_pt(p, m, p);
-    x2 = p[0]; y2 = p[2]; z2 = p[2];
+    x2 = p[0]; y2 = p[1]; z2 = p[2];
     vvec[0] = x2-x1;
     vvec[1] = y2-y1;
     vvec[2] = z2-z1;
