@@ -94,10 +94,128 @@ void graph_sphere(double m[4][4], double interval) {
     set_color(R, G, B); //Reset the color to what it was before the graphing
 }
 
-int main(int argc, char const *argv[]) {
-    G_init_graphics(600, 600);
+void render(int frame_number) {
     set_color(0, 0, 0);
     G_clear();
+    fov = (80-2*frame_number)*M_PI/180;
+    int Tn;
+    int Ttypelist[10];
+    double Tvlist[10];
+    double Mat[4][4];
+    double Imat[4][4];
+    //////////////////////////////////////////////
+    // unit sphere
+
+    Tn = 0 ; // number of transformations
+    Ttypelist[Tn] = SX ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = SY ; Tvlist[Tn] =   10    ; Tn++ ;
+    Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+    Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+    D3d_make_movement_sequence_matrix (
+        Mat,
+        Imat,
+        Tn,
+        Ttypelist,
+        Tvlist) ;
+
+    set_color(0.00, 0.00, 1.00);
+    graph_sphere(Mat, 0.01);
+
+    ////////////////////////////////////////////////////
+    // unit sphere
+
+    Tn = 0 ; // number of transformations
+    Ttypelist[Tn] = SX ; Tvlist[Tn] =   10    ; Tn++ ;
+    Ttypelist[Tn] = SY ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = RY ; Tvlist[Tn] =    0    ; Tn++ ;
+    Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+    Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+    D3d_make_movement_sequence_matrix (
+        Mat,
+        Imat,
+        Tn,
+        Ttypelist,
+        Tvlist) ;
+
+    set_color(0.00, 1.00, 0.25);
+    graph_sphere(Mat, 0.01);
+
+    ////////////////////////////////////////////////////
+    // unit sphere
+
+    Tn = 0 ; // number of transformations
+    Ttypelist[Tn] = SX ; Tvlist[Tn] =   10    ; Tn++ ;
+    Ttypelist[Tn] = SY ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = RY ; Tvlist[Tn] =   60    ; Tn++ ;
+
+    Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+    Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+    D3d_make_movement_sequence_matrix (
+        Mat,
+        Imat,
+        Tn,
+        Ttypelist,
+        Tvlist) ;
+
+
+    set_color(1.00, 1.00, 1.00);
+    graph_sphere(Mat, 0.01);
+
+    ////////////////////////////////////////////////////
+    // unit sphere
+
+    Tn = 0 ; // number of transformations
+    Ttypelist[Tn] = SX ; Tvlist[Tn] =   10    ; Tn++ ;
+    Ttypelist[Tn] = SY ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = SZ ; Tvlist[Tn] =  100    ; Tn++ ;
+    Ttypelist[Tn] = RY ; Tvlist[Tn] =  120    ; Tn++ ;
+    Ttypelist[Tn] = RX ; Tvlist[Tn] =  -70    ; Tn++ ;
+    Ttypelist[Tn] = TZ ; Tvlist[Tn] =  400    ; Tn++ ;
+
+    D3d_make_movement_sequence_matrix (
+        Mat,
+        Imat,
+        Tn,
+        Ttypelist,
+        Tvlist) ;
+
+
+    set_color(1.00, 0.00, 1.00);
+    graph_sphere(Mat, 0.01);
+
+    ////////////////////////////////////////////////////
+
+}
+
+int main(int argc, char const *argv[]) {
+    char prefix[100], sequence_name[100] ;
+    int s,e,i ;
+    double f ;
+
+    if (argc == 4) {
+        strcpy(prefix, argv[1]);
+        s = atoi(argv[2]);
+        e = atoi(argv[3]);
+    } else {
+        printf("enter prefix name ") ;
+        scanf("%s",prefix) ;
+
+        printf("enter starting integer ") ;
+        scanf("%d",&s) ;
+
+        printf("enter ending integer ") ;
+        scanf("%d",&e) ;
+    }
+
+    
+
+    G_init_graphics(600, 600);
     set_color(0, 1, 1);
     //Initialize the Z-buffer
     for (int x=0; x<600; x++) {
@@ -112,16 +230,13 @@ int main(int argc, char const *argv[]) {
     MAX_DIFFUSE = 0.5 ;
     SPECPOW = 80 ;
 
-    //Set up view
-    fov = M_PI/8.0;
+    for (i = s ; i <= e ; i++) {
+        printf("rendering frame %d\n", i);
+        render(i);
+        sprintf(sequence_name, "%s%04d.xwd", prefix, i) ;
+        G_save_image_to_file(sequence_name) ;
+    }
 
-    double m[4][4], minv[4][4];
-
-    D3d_make_identity(m);
-    D3d_translate(m, minv, 0, 0, 10);
-
-    graph_sphere(m, .01);
-
-    G_wait_key();
+    G_close() ;
     return 0;
 }
