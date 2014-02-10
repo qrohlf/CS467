@@ -29,7 +29,7 @@ int main ()
   */
 
 
-  G_init_graphics(400,400) ;
+  G_init_graphics(600,600) ;
 
   while (0 == 0) {
 

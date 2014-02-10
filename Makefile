@@ -10,4 +10,5 @@ movieplayer:
 all: lab1 lab2 movieplayer
 
 clean:
-	rm *.xwd
+	rm -f *.xwd
+	rm -rf bin/*

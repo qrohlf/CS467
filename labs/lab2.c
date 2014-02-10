@@ -7,7 +7,6 @@
 
 
 // Globals
-double h = .001;
 double Z_BUF[600][600];
 double fov;
 double R, G, B;
@@ -94,7 +93,7 @@ void graph_sphere(double m[4][4], double interval) {
     set_color(R, G, B); //Reset the color to what it was before the graphing
 }
 
-void render(int frame_number) {
+void render(int frame_number, double interval) {
     set_color(0, 0, 0);
     G_clear();
     fov = (80-2*frame_number)*M_PI/180;
@@ -121,7 +120,7 @@ void render(int frame_number) {
         Tvlist) ;
 
     set_color(0.00, 0.00, 1.00);
-    graph_sphere(Mat, 0.01);
+    graph_sphere(Mat, interval);
 
     ////////////////////////////////////////////////////
     // unit sphere
@@ -142,7 +141,7 @@ void render(int frame_number) {
         Tvlist) ;
 
     set_color(0.00, 1.00, 0.25);
-    graph_sphere(Mat, 0.01);
+    graph_sphere(Mat, interval);
 
     ////////////////////////////////////////////////////
     // unit sphere
@@ -165,7 +164,7 @@ void render(int frame_number) {
 
 
     set_color(1.00, 1.00, 1.00);
-    graph_sphere(Mat, 0.01);
+    graph_sphere(Mat, interval);
 
     ////////////////////////////////////////////////////
     // unit sphere
@@ -187,7 +186,7 @@ void render(int frame_number) {
 
 
     set_color(1.00, 0.00, 1.00);
-    graph_sphere(Mat, 0.01);
+    graph_sphere(Mat, interval);
 
     ////////////////////////////////////////////////////
 
@@ -230,11 +229,13 @@ int main(int argc, char const *argv[]) {
     MAX_DIFFUSE = 0.5 ;
     SPECPOW = 80 ;
 
+    double res = 0.01;
     for (i = s ; i <= e ; i++) {
-        printf("rendering frame %d\n", i);
-        render(i);
+        res -= 0.0002*(double)i;
+        render(i, res);
         sprintf(sequence_name, "%s%04d.xwd", prefix, i) ;
         G_save_image_to_file(sequence_name) ;
+        printf("done rendering frame %d\n", i);
     }
 
     G_close() ;

@@ -4,6 +4,8 @@ make lab2
 
 for i in {0..30};
     do 
-    echo $i
+    echo "rendering frame $i"
     bin/lab2 prefix $i $i &
 done
+wait
+echo "Rendering complete"
