@@ -8,6 +8,7 @@
 
 // Globals
 double Z_BUF[600][600];
+double VIEW[4][4], VIEW_INV[4][4];
 double fov;
 double R, G, B;
 
@@ -19,10 +20,15 @@ void sphere(double p[3], double u, double v) {
     p[2] = cos(u)*sin(v);
 }
 
-void hyperb(double p[3], double u, double v) {
-    p[0] = 0;
-    p[1] = 0;
-    p[2] = 0;
+void hyperboloid(double p[3], double u, double v) {
+    const static double H = 1;  
+    const static double r = .25; //small radius
+    const static double R = 1;  //large radius
+    double b = sqrt((pow(r, 2)*pow(H, 2))/(pow(R,2)-pow(r,2)));
+    double d = (r/b)*sqrt(pow(u, 2)+pow(b, 2));
+    p[0] = d*cos(v);
+    p[1] = u;
+    p[2] = d*sin(v);
 }
 
 // Equation for the path of the camera
@@ -45,38 +51,6 @@ void path (int frame_number, double path_xyz[3])
 
 }
 
-// gives the unit vector for the normal vector of func at u, v
-void normal(void (*func)(double[3], double, double), double m[4][4], double u, double v, double vec[3]) {
-    double p[3]; // used to store points
-    double uvec[3]; // slope vector in u direction
-    double vvec[3]; // slope vector in v direction
-    double x1, y1, z1, x2, y2, z2;
-
-    //compute slope in u direction
-    (*func)(p, u, v);
-    D3d_mat_mult_pt(p, m, p);
-    x1 = p[0]; y1 = p[1]; z1 = p[2];
-    (*func)(p, u+.001, v);
-    D3d_mat_mult_pt(p, m, p);
-    x2 = p[0]; y2 = p[1]; z2 = p[2];
-    uvec[0] = x2-x1;
-    uvec[1] = y2-y1;
-    uvec[2] = z2-z1;
-
-    //compute slope in v direction
-    (*func)(p, u, v);
-    D3d_mat_mult_pt(p, m, p);
-    x1 = p[0]; y1 = p[1]; z1 = p[2];
-    (*func)(p, u, v+.001);
-    D3d_mat_mult_pt(p, m, p);
-    x2 = p[0]; y2 = p[1]; z2 = p[2];
-    vvec[0] = x2-x1;
-    vvec[1] = y2-y1;
-    vvec[2] = z2-z1;
-    cross_product(uvec, vvec, vec);
-    unit_vector(vec, vec);
-}
-
 void set_color(double a, double b, double c) {
     R = a;
     G = b;
@@ -90,24 +64,31 @@ void flatten(double p[3]) {
     p[1] = p[1]*(300/tan(fov))/p[2] + 300;
 }
 
-void graph(void (*func)(double[3], double, double), double m[4][4], double interval) {
+void graph(
+    void (*func)(double[3], double, double), 
+    double m[4][4], 
+    double interval, 
+    double u0, 
+    double uf, 
+    double v0, 
+    double vf) {
     double p[3];
     double irgb[3] = {R, G, B};     // Inherent color of object
     double argb[3];                 // Actual color of object
     double s[3] = {0, 0, 0};        // "s = location of start of ray"
     double n[3];                    // normal vector
-    for (double u=0; u<M_PI*2.0; u+=interval) {
-        for (double v= -M_PI/2.0; v<M_PI/2.0; v+=interval) {
+    for (double u=u0; u<uf; u+=interval) {
+        for (double v= v0; v<vf; v+=interval) {
             (*func)(p, u, v);
             D3d_mat_mult_pt(p, m, p);
             normal(func, m, u, v, n);
             nu_light_model(irgb, s, p, n, argb);
             G_rgb(argb[0], argb[1], argb[2]);
 
+            // printf("point: %f %f %f -> ", p[0], p[1], p[2]);
             flatten(p);
+            // printf("%d %d\n", (int)p[0], (int)p[1]);
             // check the z-buffer
-            // printf("previous z-val at %d %d: %f\n", (int)p[0], (int)p[1], Z_BUF[(int)p[0]][(int)p[1]]);
-            // printf("current z-val: %f\n", p[2]);
             if (p[0] >= 600 || p[0] < 0 || p[1] >= 600 || p[1] < 0) {
                 // printf("point out of bounds\n");
                 continue;
@@ -123,137 +104,221 @@ void graph(void (*func)(double[3], double, double), double m[4][4], double inter
     set_color(R, G, B); //Reset the color to what it was before the graphing
 }
 
-void render(int frame_number, double interval) {
+// graph a sphere of radius r at point p
+void sphere_at(double p[3], double r) {
+    double m[4][4], m_inv[4][4];
+    int type[6];
+    double value[6];
+    
+    int n = 0 ; // number of transformations
+    type[n] = SX ; value[n] =  r    ; n++ ;
+    type[n] = SY ; value[n] =  r    ; n++ ;
+    type[n] = SZ ; value[n] =  r    ; n++ ;
+    type[n] = TX ; value[n] =  p[0]    ; n++ ;
+    type[n] = TY ; value[n] =  p[1]    ; n++ ;
+    type[n] = TZ ; value[n] =  p[2]    ; n++ ;
+
+    D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
+    D3d_mat_mult(m, VIEW, m);
+
+    graph(sphere, m, 0.05, 0, M_PI*2.0, -M_PI/2.0, M_PI/2.0);
+}
+
+// hyperboloid at point p
+void hyp_base(double p[3], double length, double rz) {
+    double m[4][4], m_inv[4][4];
+    double ab[3]; //the vector between the two points
+    int type[100];
+    double value[100];
+    
+    int n = 0 ; // number of transformations
+
+    // make the hyperboloid thinner
+    type[n] = SX ; value[n] =  0.03    ; n++ ;
+    type[n] = SZ ; value[n] =  0.03    ; n++ ;
+
+    // get it on top of the x axis
+    type[n] = TY; value[n] = 1; n++;
+
+    // fit it to the right length
+    type[n] = SY ; value[n] =  length/2.0    ; n++ ;
+
+    // rotate
+    type[n] = RZ ; value[n] =  90    ; n++ ;
+    type[n] = RY ; value[n] =  rz    ; n++ ;
+
+    // translate to point p
+    type[n] = TX ; value[n] =  p[0]    ; n++ ;
+    type[n] = TY ; value[n] =  p[1]    ; n++ ;
+    type[n] = TZ ; value[n] =  p[2]    ; n++ ;
+
+    D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
+    D3d_mat_mult(m, VIEW, m);
+
+    graph(hyperboloid, m, 0.03, -1, 1, 0, M_PI*2.0);
+}
+
+void hyp_top(double length, double rz) {
+    double m[4][4], m_inv[4][4];
+    double ab[3]; //the vector between the two points
+    int type[100];
+    double value[100];
+    
+    int n = 0 ; // number of transformations
+
+    // make the hyperboloid thinner
+    type[n] = SX ; value[n] =  0.03    ; n++ ;
+    type[n] = SZ ; value[n] =  0.03    ; n++ ;
+
+    // get it on top of the x axis
+    type[n] = TY; value[n] = 1; n++;
+
+    // fit it to the right length
+    type[n] = SY ; value[n] =  length/2.0    ; n++ ;
+
+    // tilt
+    type[n] = RZ ; value[n] =  35    ; n++ ; //this works super great when set to 35 deg. ...what?
+
+    // translate to first vertex
+    type[n] = TX ; value[n] =  1    ; n++ ;
+    type[n] = TY ; value[n] =  0    ; n++ ;
+    type[n] = TZ ; value[n] =  0    ; n++ ;
+
+    // rotate
+    type[n] = RY ; value[n] =  rz    ; n++ ;
+
+    D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
+    D3d_mat_mult(m, VIEW, m);
+
+    graph(hyperboloid, m, 0.03, -1, 1, 0, M_PI*2.0);
+}
+
+void render(int frame_number) {
+    // ################################
+    // 0. Black background
+    // ################################
     set_color(0, 0, 0);
     G_clear();
-    fov = 25.0*M_PI/180.0;
-    double degrees_of_half_angle ;
-    double eye[3],coi[3],up[3] ;
-    double light_position[3], amb, diff, spow ;
-    double view[4][4], view_inv[4][4];
 
-    // model variables
-    double xcen[4],ycen[4],zcen[4] ; // four nodes of tetrahedron
-    double ccx,ccy,ccz,ccr ; // location of center of center sphere and radius
-    double theta;
-    double brad = 0.08 ; // radius of the 4 verts of the tetrahedron
-    ccr  = 0.20 ; // the radius of the center node of the model
-    
-
-
-    for (int k = 0 ; k < 3 ; k++) {
-        theta = 2*M_PI*k/3 ;
-        xcen[k] = cos(theta) ;
-        ycen[k] = 0 ;
-        zcen[k] = sin(theta) ;
-      }
-
-    xcen[3] = 0 ; ycen[3] = sqrt(3)/2.0 ; zcen[3] = 0 ;
-    ccx = 0 ; ccy = 1.0/4.0 ; ccz = 0 ;
+    // ################################
+    // 1. Set the view matrix
+    // ################################
+    double eye[3], coi[3], up[3];
 
     // set eye point
-    eye[0] = 0; eye[1] = 0; eye[2] = 0;
-    path (frame_number, eye) ;
+    path (frame_number, eye);
 
-    // set coi 
-    coi[0] = (xcen[0] + xcen[1] + xcen[2])/3.0; 
-    coi[1] = (ycen[0] + ycen[1] + ycen[2])/3.0; 
-    coi[2] = (zcen[0] + zcen[1] + zcen[2])/3.0;
+    // set center of interest
+    coi[0] = 0;
+    coi[1] = 0.25;
+    coi[2] = 0;
 
-    // set up point
-    up[0] = 0; up[1] = 1; up[2] = 0;
+    // set the up point
     path (frame_number + 1, up) ; 
 
-    D3d_view(view, view_inv, eye, coi, up); 
+    // compute the view matrix
+    D3d_view(VIEW, VIEW_INV, eye, coi, up); 
 
+    // ################################
+    // 2. Set the light model
+    // ################################
+    double light_position_world[3];
 
-    int Tn;
-    int Ttypelist[10];
-    double Tvlist[10];
-    double Mat[4][4];
-    double Imat[4][4];
+    // set constants
+    AMBIENT  = 0.2 ;
+    MAX_DIFFUSE = 0.5 ;
+    SPECPOW = 80 ;
+    fov = 25 * M_PI/180;
 
-      //////////////////////////////////////////////
-      //////////////////////////////////////////////
-      // build a ball and stick model of a tetrahedron
-      //////////////////////////////////////////////
-      //////////////////////////////////////////////
-      // 3 equally spaced pts around unit circle in the xz-plane 
-      // form the base
-      
-      for (int k = 0 ; k < 4 ; k++) {
-        Tn = 0 ; // number of transformations
-        Ttypelist[Tn] = SX ; Tvlist[Tn] =  brad    ; Tn++ ;
-        Ttypelist[Tn] = SY ; Tvlist[Tn] =  brad    ; Tn++ ;
-        Ttypelist[Tn] = SZ ; Tvlist[Tn] =  brad    ; Tn++ ;
-        Ttypelist[Tn] = TX ; Tvlist[Tn] =  xcen[k]    ; Tn++ ;
-        Ttypelist[Tn] = TY ; Tvlist[Tn] =  ycen[k]    ; Tn++ ;
-        Ttypelist[Tn] = TZ ; Tvlist[Tn] =  zcen[k]    ; Tn++ ;
+    // get the light's position in world space
+    path (frame_number + 10, light_position_world);
 
-        D3d_make_movement_sequence_matrix (
-            Mat,
-            Imat,
-            Tn,
-            Ttypelist,
-            Tvlist) ;
-        D3d_mat_mult(Mat, view, Mat);
-        set_color(0.00, 0.00, 1.00);
-        graph(sphere, Mat, interval);
-      }
+    // set the light's position in eye space
+    D3d_mat_mult_pt(light_in_eye_space, VIEW, light_position_world);
 
-    // CENTER BALL
-    Tn = 0 ; // number of transformations
-    Ttypelist[Tn] = SX ; Tvlist[Tn] =  ccr    ; Tn++ ;
-    Ttypelist[Tn] = SY ; Tvlist[Tn] =  ccr    ; Tn++ ;
-    Ttypelist[Tn] = SZ ; Tvlist[Tn] =  ccr    ; Tn++ ;
-    Ttypelist[Tn] = TX ; Tvlist[Tn] =  ccx    ; Tn++ ;
-    Ttypelist[Tn] = TY ; Tvlist[Tn] =  ccy    ; Tn++ ;
-    Ttypelist[Tn] = TZ ; Tvlist[Tn] =  ccz    ; Tn++ ;
+    // ################################
+    // 3. Build the tetrahedron vertices
+    // 
+    // tetrahedron side length is sqrt(3)
+    // tetrahedron height is 
+    // ################################
+    double vertices[4][3];
+    double vertex_radius = 0.08;
 
-    D3d_make_movement_sequence_matrix (
-        Mat,
-        Imat,
-        Tn,
-        Ttypelist,
-        Tvlist) ;
-    D3d_mat_mult(Mat, view, Mat);
+    // compute the locations of the base
+    for (int i = 0 ; i < 3 ; i++) {
+        double theta = M_PI*i*2.0/3.0;
+        vertices[i][0] = cos(theta);
+        vertices[i][1] = 0;
+        vertices[i][2] = sin(theta);
+    }    
+
+    // set the location of the top
+    vertices[3][0] = 0;
+    vertices[3][1] = sqrt(2);
+    vertices[3][2] = 0;
+
+    // graph all the vertices
+    set_color(0.00, 0.00, 1.00);
+    for (int i=0; i<4; i++) {
+        sphere_at(vertices[i], vertex_radius);
+    }
+
+    // ################################
+    // 4. Build the tetrahedron edges
+    // ################################
     set_color(0.00, 1.00, 1.00);
-    graph(sphere, Mat, interval);      
+
+    // connect the three base vertices to each other and the top
+    double rot[3] = {30, 270, 150};
+    for (int i=0; i<3; i++) {
+        hyp_base(vertices[i], sqrt(3), rot[i]);
+        hyp_top(sqrt(3), rot[i]-30);
+    }
 
 }
 
-// usage: lab2.1 [prefix] [framenumber]
-int main(int argc, char const *argv[]) {
-    char prefix[100], sequence_name[100] ;
-    int i ;
-    double f ;
-
-    strcpy(prefix, argv[1]);
-    i = atoi(argv[2]);
-
-    
-
-    G_init_graphics(600, 600);
-    set_color(0, 1, 1);
-    //Initialize the Z-buffer
+void init_zbuf() {
     for (int x=0; x<600; x++) {
         for (int y=0; y<600; y++) {
             Z_BUF[x][y] = 9999999999999;
         }
     }
+}
 
-    //Set up light
-    light_in_eye_space[0] = 100 ; light_in_eye_space[1] = 200 ; light_in_eye_space[2] = -50 ;
-    AMBIENT  = 0.2 ;
-    MAX_DIFFUSE = 0.5 ;
-    SPECPOW = 80 ;
+// usage: lab2.1 [prefix] [framenumber]
+int main(int argc, char const *argv[]) {
+    char prefix[100], sequence_name[100];
+    int framenumber;
 
-    double res = 0.01;
-    render(i, res);
-    sprintf(sequence_name, "%s%04d.xwd", prefix, i) ;
+    //Read the prefix and frame number from argv
+    strcpy(prefix, argv[1]);
+    framenumber = atoi(argv[2]);    
+    
+    //Initialize the Z-buffer
+    init_zbuf();
+
+    //Initialize the graphics
+    G_init_graphics(600, 600);    
+
+    if (argc > 3) { //testing mode
+        printf("TESTING MODE\n");
+        do {
+            printf("Displaying frame %d\n", framenumber);
+            render(framenumber);
+            framenumber++;
+        } while(G_wait_key() != 'q');
+        G_close();
+        return 0;
+    }
+
+    // Render the image
+    render(framenumber);
+
+    // Save the image
+    sprintf(sequence_name, "%s%04d.xwd", prefix, framenumber) ;
     G_save_image_to_file(sequence_name) ;
-    printf("done rendering frame %d\n", i);
-
+    printf("done rendering frame %d\n", framenumber);
     G_close() ;
     return 0;
 }
