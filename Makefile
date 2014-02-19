@@ -10,7 +10,7 @@ lab2-movie: lab2 movieplayer
 lab2.1:
 	acom -std=c99 -Ilib labs/lab2.1.c lib/D3d_matrix_student.c lib/vectors.c lib/light_model_student.c -o bin/lab2.1
 
-frames=72
+frames=5
 lab2.1-movie: lab2.1 movieplayer
 	labs/lab2.1-par.sh $(frames) && printf "lab21-mov\n0\n$(frames)\n" | bin/movieplayer
 

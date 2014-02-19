@@ -155,7 +155,7 @@ void hyp_base(double p[3], double length, double rz, double ry) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(hyperboloid, m, 0.03, -1, 1, 0, M_PI*2.0);
+    graph(hyperboloid, m, 0.003, -1, 1, 0, M_PI*2.0);
 }
 
 void hyp_top(double length, double ry, double rz) {
@@ -190,7 +190,7 @@ void hyp_top(double length, double ry, double rz) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(hyperboloid, m, 0.03, -1, 1, 0, M_PI*2.0);
+    graph(hyperboloid, m, 0.003, -1, 1, 0, M_PI*2.0);
 }
 
 void render(int frame_number) {
