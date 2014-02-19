@@ -325,8 +325,9 @@ int main(int argc, char const *argv[]) {
     if (argc > 3) { //testing mode
         printf("TESTING MODE\n");
         do {
-            printf("Displaying frame %d\n", framenumber);
+            printf("Rendering frame %d\n", framenumber);
             render(framenumber);
+            printf("Displaying frame %d\n", framenumber);
             framenumber++;
         } while(G_wait_key() != 'q');
         G_close();
