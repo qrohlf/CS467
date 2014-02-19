@@ -125,7 +125,7 @@ void sphere_at(double p[3], double r) {
 }
 
 // hyperboloid at point p
-void hyp_base(double p[3], double length, double rz) {
+void hyp_base(double p[3], double length, double rz, double ry) {
     double m[4][4], m_inv[4][4];
     double ab[3]; //the vector between the two points
     int type[100];
@@ -144,8 +144,8 @@ void hyp_base(double p[3], double length, double rz) {
     type[n] = SY ; value[n] =  length/2.0    ; n++ ;
 
     // rotate
-    type[n] = RZ ; value[n] =  90    ; n++ ;
-    type[n] = RY ; value[n] =  rz    ; n++ ;
+    type[n] = RZ ; value[n] =  rz    ; n++ ;
+    type[n] = RY ; value[n] =  ry    ; n++ ;
 
     // translate to point p
     type[n] = TX ; value[n] =  p[0]    ; n++ ;
@@ -158,7 +158,7 @@ void hyp_base(double p[3], double length, double rz) {
     graph(hyperboloid, m, 0.03, -1, 1, 0, M_PI*2.0);
 }
 
-void hyp_top(double length, double rz) {
+void hyp_top(double length, double ry, double rz) {
     double m[4][4], m_inv[4][4];
     double ab[3]; //the vector between the two points
     int type[100];
@@ -177,7 +177,7 @@ void hyp_top(double length, double rz) {
     type[n] = SY ; value[n] =  length/2.0    ; n++ ;
 
     // tilt
-    type[n] = RZ ; value[n] =  35    ; n++ ; //this works super great when set to 35 deg. ...what?
+    type[n] = RZ ; value[n] =  rz; n++ ; 
 
     // translate to first vertex
     type[n] = TX ; value[n] =  1    ; n++ ;
@@ -185,7 +185,7 @@ void hyp_top(double length, double rz) {
     type[n] = TZ ; value[n] =  0    ; n++ ;
 
     // rotate
-    type[n] = RY ; value[n] =  rz    ; n++ ;
+    type[n] = RY ; value[n] =  ry    ; n++ ;
 
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
@@ -272,9 +272,30 @@ void render(int frame_number) {
     // connect the three base vertices to each other and the top
     double rot[3] = {30, 270, 150};
     for (int i=0; i<3; i++) {
-        hyp_base(vertices[i], sqrt(3), rot[i]);
-        hyp_top(sqrt(3), rot[i]-30);
+        hyp_base(vertices[i], sqrt(3), 90, rot[i]);
+        hyp_top(sqrt(3), rot[i]-30, 35.26); //acos(sqrt(2/3)) == 35.26 (in degrees)
     }
+
+    // ################################
+    // 5. Build the tetrahedron center
+    // ################################
+    double center_radius  = 0.20;
+    set_color(1.00, 0.50, 0.00);
+    sphere_at(coi, center_radius);
+    // set_color(1,1,1); sphere_at(coi, center_radius/3.0); //debug only
+
+    // ################################
+    // 6. connect the vertices to the center
+    // ################################
+    set_color(1.0, 1.0, 1.0);
+    double length = sqrt(pow(.25, 2)+1);
+    double angle = 90 - (atan(0.25)*180.0/M_PI);
+    //the base
+    for (int i=0; i<3; i++) {
+        hyp_top(length, rot[i]-30, angle); //acos(sqrt(2/3)) == 35.26 (in degrees)
+    }
+    //and the top
+    hyp_base(coi, length, 0, 0);
 
 }
 
@@ -292,7 +313,7 @@ int main(int argc, char const *argv[]) {
     int framenumber;
 
     //Read the prefix and frame number from argv
-    strcpy(prefix, argv[1]);
+    strcpy(prefix, argv[1]); 
     framenumber = atoi(argv[2]);    
     
     //Initialize the Z-buffer
@@ -312,13 +333,14 @@ int main(int argc, char const *argv[]) {
         return 0;
     }
 
+    printf("rendering frame %d...\n", framenumber);
     // Render the image
     render(framenumber);
+    printf("done rendering frame %d\n", framenumber);
 
     // Save the image
     sprintf(sequence_name, "%s%04d.xwd", prefix, framenumber) ;
     G_save_image_to_file(sequence_name) ;
-    printf("done rendering frame %d\n", framenumber);
     G_close() ;
     return 0;
 }
