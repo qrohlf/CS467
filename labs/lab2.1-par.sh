@@ -3,7 +3,6 @@ INCREMENT=5
 
 for ((i=0; i < $1 ; i=i+5))
 do
-    echo $i
     echo "########################"
     echo "# Rendering frames $i-$(($i+5))"
     echo "########################"

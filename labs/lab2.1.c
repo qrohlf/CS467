@@ -12,6 +12,13 @@ double VIEW[4][4], VIEW_INV[4][4];
 double fov;
 double R, G, B;
 
+// test value: .03
+// render value: .003
+double hyperboloid_interval = .003;
+// test value: .05
+// render value: .005
+double sphere_interval = .005;
+
 
 // Equation for a sphere
 void sphere(double p[3], double u, double v) {
@@ -121,7 +128,7 @@ void sphere_at(double p[3], double r) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(sphere, m, 0.05, 0, M_PI*2.0, -M_PI/2.0, M_PI/2.0);
+    graph(sphere, m, sphere_interval, 0, M_PI*2.0, -M_PI/2.0, M_PI/2.0);
 }
 
 // hyperboloid at point p
@@ -155,7 +162,7 @@ void hyp_base(double p[3], double length, double rz, double ry) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(hyperboloid, m, 0.003, -1, 1, 0, M_PI*2.0);
+    graph(hyperboloid, m, hyperboloid_interval, -1, 1, 0, M_PI*2.0);
 }
 
 void hyp_top(double length, double ry, double rz) {
@@ -190,7 +197,7 @@ void hyp_top(double length, double ry, double rz) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(hyperboloid, m, 0.003, -1, 1, 0, M_PI*2.0);
+    graph(hyperboloid, m, hyperboloid_interval, -1, 1, 0, M_PI*2.0);
 }
 
 void render(int frame_number) {
@@ -310,38 +317,34 @@ void init_zbuf() {
 // usage: lab2.1 [prefix] [framenumber]
 int main(int argc, char const *argv[]) {
     char prefix[100], sequence_name[100];
-    int framenumber;
+    int start, end;
+
 
     //Read the prefix and frame number from argv
     strcpy(prefix, argv[1]); 
-    framenumber = atoi(argv[2]);    
-    
+    start = atoi(argv[2]); 
+    if (argc == 4) {
+        end = atoi(argv[3]);
+    } else {
+        end = start;
+    }
+
     //Initialize the Z-buffer
     init_zbuf();
 
     //Initialize the graphics
     G_init_graphics(600, 600);    
 
-    if (argc > 3) { //testing mode
-        printf("TESTING MODE\n");
-        do {
-            printf("Rendering frame %d\n", framenumber);
-            render(framenumber);
-            printf("Displaying frame %d\n", framenumber);
-            framenumber++;
-        } while(G_wait_key() != 'q');
-        G_close();
-        return 0;
+    for (int i=start; i<=end; i++) {
+        printf("rendering frame %d...\n", i);
+        // Render the image
+        render(i);
+        printf("done rendering frame %d\n", i);
+
+        // Save the image
+        sprintf(sequence_name, "%s%04d.xwd", prefix, i) ;
+        G_save_image_to_file(sequence_name) ;
     }
-
-    printf("rendering frame %d...\n", framenumber);
-    // Render the image
-    render(framenumber);
-    printf("done rendering frame %d\n", framenumber);
-
-    // Save the image
-    sprintf(sequence_name, "%s%04d.xwd", prefix, framenumber) ;
-    G_save_image_to_file(sequence_name) ;
     G_close() ;
     return 0;
 }
