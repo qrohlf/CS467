@@ -14,7 +14,7 @@ double R, G, B;
 
 // test value: .03
 // render value: .003
-double hyperboloid_interval = .003;
+double hyperboloid_interval = .002;
 // test value: .05
 // render value: .005
 double sphere_interval = .005;
@@ -217,7 +217,7 @@ void render(int frame_number) {
 
     // set center of interest
     coi[0] = 0;
-    coi[1] = 0.25;
+    coi[1] = sqrt(2)/4;
     coi[2] = 0;
 
     // set the up point
@@ -295,8 +295,8 @@ void render(int frame_number) {
     // 6. connect the vertices to the center
     // ################################
     set_color(1.0, 1.0, 1.0);
-    double length = sqrt(pow(.25, 2)+1);
-    double angle = 90 - (atan(0.25)*180.0/M_PI);
+    double length = sqrt(pow(coi[1], 2)+1);
+    double angle = 90 - (atan(coi[1])*180.0/M_PI);
     //the base
     for (int i=0; i<3; i++) {
         hyp_top(length, rot[i]-30, angle); //acos(sqrt(2/3)) == 35.26 (in degrees)
