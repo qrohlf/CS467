@@ -14,7 +14,7 @@ double R, G, B;
 
 // test value: .03
 // render value: .003
-double hyperboloid_interval = .002;
+double hyperboloid_interval = .0025;
 // test value: .05
 // render value: .005
 double sphere_interval = .005;
