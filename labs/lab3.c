@@ -6,6 +6,12 @@
 #include <light_model_student.h>
 
 
+// implicit equations:
+// unit sphere:
+// x^2+y^2+z^2-1 = 0
+// hyperboloid:
+// x^2/r^2 - y^2/b^2 + z^2/r^2 -1 = 0
+
 // Globals
 double Z_BUF[600][600];
 double VIEW[4][4], VIEW_INV[4][4];
@@ -25,24 +31,6 @@ typedef struct so
 scene_object SCENE[10];
 int SCENE_N = 0;
 
-// Equation for a sphere
-void sphere(double p[3], double u, double v) {
-    p[0] = cos(u)*cos(v);
-    p[1] = sin(u);
-    p[2] = cos(u)*sin(v);
-}
-
-void hyperboloid(double p[3], double u, double v) {
-    const static double H = 1;  
-    const static double r = .25; //small radius
-    const static double R = 1;  //large radius
-    double b = sqrt((pow(r, 2)*pow(H, 2))/(pow(R,2)-pow(r,2)));
-    double d = (r/b)*sqrt(pow(u, 2)+pow(b, 2));
-    p[0] = d*cos(v);
-    p[1] = u;
-    p[2] = d*sin(v);
-}
-
 // Equation for the path of the camera
 void path (int frame_number, double path_xyz[3])
 {
@@ -60,6 +48,16 @@ void path (int frame_number, double path_xyz[3])
   path_xyz[0] = x ;
   path_xyz[1] = y ;
   path_xyz[2] = z ;
+
+}
+
+// Takes the equation of a ray going from the origin in eyespace to (x, y, 1) in eyespace,
+// and finds the intersection between that ray and the objects in the scene
+// 
+// The ray equation in eyespace is in the form of t*(x/300, y/300, 1) = (x, y, z)
+// The scene equations in eyespace are in the form of f(u, v)*VIEW*m = (x, y, z)
+// Thus, t*(x/300, y/300, 1) = f(u, v)*VIEW*m
+void intersect() {
 
 }
 
