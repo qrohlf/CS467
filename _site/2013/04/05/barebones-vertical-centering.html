@@ -1,0 +1,32 @@
+<p>In one of the responsive site designs that I worked on recently, I needed equal-height columns with background colors, dynamic widths and vertically centered text. The equal-height columns part has been covered in depth <a href="https://www.google.com/search?q=equal+height+columns">elsewhere</a>. I used Javascript for my solution, as the client wanted rounded corners - something difficult to fake with the pure CSS tricks out there without resorting to funky and un-semantic markup.</p>
+
+<p>The next challenge was how to vertically center the text within the columns. Because the text was multiline and the divs also included images, I couldn&#39;t just set <code>line-height</code> to match the container height and have done with it. Using <code>display: table;</code> and <code>display: table-cell;</code> to get vertical centering broke my layout - it also seemed like an ugly hack. So instead, I wrote up a short solution in JQuery. What it does is it finds how much empty space is left below the last element in the div, then adds half of that space to the top of a specified element within that div, resulting in the div being vertically centered. If the element specified by the text-identifier appears at the top of the div, the entire div contents will appear vertically centered. If the element appears at the end of the div content, the element will appear centered within the empty space at the end of the div.</p>
+
+<p>The code that allows it to do this is fairly trivial, save for the code that determines how much empty space is left at the end of a div. Figuring this out took some digging and a lot of experimentation, as the way that element heights are measured in JQuery does not include margins or padding by default. Here&#39;s the code to get the empty space in an element:</p>
+
+<div class="highlight"><pre><code class="javascript"><span class="kd">function</span> <span class="nx">emptySpace</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">lowestBottom</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> 
+    <span class="nx">$</span><span class="p">(</span><span class="nx">element</span><span class="p">).</span><span class="nx">children</span><span class="p">().</span><span class="nx">each</span><span class="p">(</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span> 
+    <span class="kd">var</span> <span class="nx">bottom</span> <span class="o">=</span> <span class="nx">outerBottomOffset</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="k">this</span><span class="p">));</span> 
+        <span class="k">if</span> <span class="p">(</span><span class="nx">bottom</span> <span class="o">&gt;</span> <span class="nx">lowestBottom</span><span class="p">)</span> <span class="p">{</span> <span class="nx">lowestBottom</span> <span class="o">=</span> <span class="nx">bottom</span><span class="p">;</span> <span class="p">}</span> 
+    <span class="p">});</span> 
+    <span class="kd">var</span> <span class="nx">containerBottom</span> <span class="o">=</span> <span class="nx">innerBottomOffset</span><span class="p">(</span><span class="nx">$</span><span class="p">(</span><span class="nx">element</span><span class="p">));</span> 
+    <span class="kd">var</span> <span class="nx">emptyHeight</span> <span class="o">=</span> <span class="nx">containerBottom</span> <span class="o">-</span> <span class="nx">lowestBottom</span><span class="p">;</span> 
+    <span class="k">return</span> <span class="nx">emptyHeight</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kd">function</span> <span class="nx">outerBottomOffset</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="k">return</span> <span class="nx">element</span><span class="p">.</span><span class="nx">offset</span><span class="p">().</span><span class="nx">top</span> <span class="o">+</span> <span class="nx">element</span><span class="p">.</span><span class="nx">outerHeight</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span> 
+<span class="p">}</span> 
+
+<span class="kd">function</span> <span class="nx">innerBottomOffset</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span> 
+    <span class="k">return</span> <span class="nx">element</span><span class="p">.</span><span class="nx">offset</span><span class="p">().</span><span class="nx">top</span> 
+           <span class="o">+</span> <span class="nx">element</span><span class="p">.</span><span class="nx">outerHeight</span><span class="p">(</span><span class="kc">true</span><span class="p">)</span> 
+           <span class="o">-</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">element</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;padding-bottom&quot;</span><span class="p">))</span> 
+           <span class="o">-</span> <span class="nb">parseInt</span><span class="p">(</span><span class="nx">element</span><span class="p">.</span><span class="nx">css</span><span class="p">(</span><span class="s2">&quot;margin-bottom&quot;</span><span class="p">));</span> 
+<span class="p">}</span> 
+</code></pre></div>
+
+<p>Combining that with the basic code for the columns, you get <a href="http://jsfiddle.net/bbcH7/2/">this</a>.</p>
+
+<p>That&#39;s it. A simple and responsive way to implement equal-height, vertically centered columns with responsive widths and heights using JQuery. I like it because the markup stays semantic, and you can style your columns the same way you can style any div, with border-radius, background images, etc.</p>

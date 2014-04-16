@@ -1,0 +1,56 @@
+<p>I recently came across <a href="http://www.rubyinside.com/the-split-is-not-enough-whitespace-shenigans-for-rubyists-5980.html">this article</a>, which highlights an interesting side effect of how ruby supports Unicode special characters. Ruby treats the Unicode non-breaking space (U+00A0) like any other Unicode special character, meaning it can be used for variable and method names. The article illustrates this with the following code snippet:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">def  (  )
+      *2
+end
+ =4
+puts   
+</code></pre></div>
+<p>This code outputs 8 when run. It does this by defining a method called <code>nbsp</code> (where <code>nbsp</code> is actually an instance of U+00A0) which takes an argument <code>nbspnbsp</code> and returns <code>nbspnbsp*2</code>. It then defines a variable called <code>nbsp</code> equal to 4 and prints the result of applying the <code>nbsp</code> method to it.</p>
+
+<h1>Further Investigation</h1>
+
+<p>The author of the above post ends it with a dire warning: </p>
+
+<blockquote>
+<p>Please don&#39;t use this in production code or the Ruby gods will come and haunt you in your sleep. </p>
+</blockquote>
+
+<p>However, I believe that there is a time and a place for shenanigans, and that it is here and now.
+<img src="/images/ruby-whitespace-shenanigans/shenanigans.gif" alt="shenanigans"  class="bordered" /></p>
+
+<p>I decided to take the insanity a bit further and write &#39;Hello World&#39; using U+00A0 and int-to-char casting: </p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">      = 1
+      =  + 
+      =   *  + 
+      =    *  
+      = 
+      [      *(   +  )+  , 
+             =     *    + , 
+             =     *    +    -  , 
+            , 
+            =        +    ,
+        *  +    +  , 
+        *    -  *    +   +  , 
+           , 
+           + +  , 
+            , 
+        *    ,     + +  , 
+        ]
+puts      .map(&amp;:chr).join
+</code></pre></div>
+<p>That code snippet will output <code>Hello World</code> if you save it with utf-8 encoding and run it.</p>
+
+<p>(Since your web browser may or may not want to let you copy and paste this into a text editor with the Unicode intact, I suggest downloading a copy from <a href="https://gist.github.com/qrohlf/7045823">this gist</a> if you&#39;d like to try running it for yourself).</p>
+
+<p>This isn&#39;t anything ground-breaking. You can see a non-whitespace version of the program <a href="https://gist.github.com/qrohlf/7046060">here</a>. I define a variable <code>one</code> as the integer literal <code>1</code>, then define <code>two</code>, <code>five</code>, and <code>ten</code> using <code>one</code>. The program then creates an array of the ASCII integer values representing the characters of &quot;Hello World&quot;, expressed mathematically using the variables <code>one</code>, <code>two</code>, <code>five</code>, and <code>ten</code>. It uses variable definitions inside the array definition to shorten the process. The final line casts the integer ASCII values of the &#39;hw&#39; array to ASCII characters, then joins them into a string and prints the string to Stdout.</p>
+
+<p>This is, of course, a very quick-and-dirty proof of concept. I&#39;m sure you could optimize this further with some math to find the greatest common divisors of all the decimal representations of the characters of &quot;Hello World&quot; and reduce the number of arithmetic operators needed to create the array. For now, I&#39;m satisfied to leave it as-is, but if you have a better implementation I&#39;d love to see it. My contact info is in the footer.</p>
+
+<h1>But Wait - There&#39;s More!</h1>
+
+<p>U+00A0 isn&#39;t the only unusual and invisible character in Unicode. Other notables include text control characters, as well as a whole host of other non-standard whitespace characters in the U+0080 to U+00A0 range. I think I&#39;ve done enough damage for now and will leave the exploration of what can (but probably shouldn&#39;t) be done with these characters for another time. </p>
+
+<p>However, I couldn&#39;t resist a quick parting gift:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">puts &quot;‮dlroW olleH‭&quot;
+</code></pre></div>
+<p>is also valid Ruby and will output &quot;Hello World&quot;. Here&#39;s a <a href="https://gist.github.com/qrohlf/7058074">gist</a> if you&#39;re having trouble running it.</p>

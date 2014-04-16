@@ -1,0 +1,78 @@
+<p>So, Github has a fancy new text editor, <a href="https://atom.io">Atom</a>. I was lucky enough to get in on the beta, and I&#39;ve been using it for all of my programming for the last two days. So far, I really like it. The UI is very similar to Sublime Text and uses many of the same key bindings, so it was pretty easy for me to get my bearings. With that said, there were definitely a few annoyances present in Atom in its out-of-the-box state, so I took those as an opportunity to see just how &quot;modern, approachable, and hackable to the core&quot; Atom really is.</p>
+
+<p>Here&#39;s the breakdown:</p>
+
+<h1>1. Color Scheme</h1>
+
+<p>I use the excellent Soda theme for Sublime Text with the Monokai Soda TextMate theme for syntax highlighting. The default syntax highlighting scheme that ships with Atom is, in my opinion, far inferior to Monokai Soda, so the first order of business was to get that installed.</p>
+
+<p><img src="/images/atom-initial-impressions/atom-default.png" alt="atom default theme">
+<span class='caption'>Atom default theme</span></p>
+
+<p><img src="/images/atom-initial-impressions/monokai-soda.png" alt="monokai soda theme">
+<span class='caption'>Monokai soda theme</span></p>
+
+<p>I was happy to find that Atom supports TextMate themes and provides a utility to <a href="https://atom.io/docs/v0.62.0/converting-a-text-mate-theme">convert them into LESS files</a> for use as native Atom themes. This is pretty sweet. So, to install Monokai Soda in Atom, I downloaded the <a href="http://buymeasoda.github.com/soda-theme/extras/colour-schemes.zip">Monokai Soda TextMate theme</a>, pointed my terminal to the directory I extracted it to, and converted it with</p>
+<div class="highlight"><pre><code class="bash language-bash" data-lang="bash">apm init --theme ~/.atom/packages/monokai-soda --convert Monokai<span class="se">\ </span>Soda.tmTheme
+</code></pre></div>
+<p>After that, I popped open Atom&#39;s preferences and activated the new syntax theme on the Themes panel. It&#39;s worth noting that Atom has graphical preferences in addition to json configuration files for various settings and key bindings. I&#39;m not entirely sure how I feel about this, and I&#39;m interested to see whether community plugins will tend towards using the preferences GUI or letting users specify their preferences in json.</p>
+
+<h1>2. Fonts and Font Size</h1>
+
+<p>The default font size on Atom is HUGE, and I&#39;m a big fan of Adobe&#39;s Source Code Pro for code editing. Fixing both the font size and font family was pretty painless with <code>styles.less</code>:</p>
+<div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.tree-view</span> <span class="p">{</span>
+  <span class="k">font-size</span><span class="o">:</span> <span class="m">11px</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nc">.editor</span> <span class="p">{</span>
+  <span class="k">font-family</span><span class="o">:</span> <span class="s1">&#39;Source Code Pro&#39;</span><span class="o">,</span> <span class="k">sans-serif</span><span class="p">;</span>
+  <span class="k">font-size</span><span class="o">:</span> <span class="m">11px</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>3. Cursor Blinking</h1>
+
+<p>One of the first things that bothered me when I started using Atom was that the cursor blinks at a slightly faster rate than every other app on my system. It ruined the whole &quot;native app&quot; feel and set me on edge.</p>
+
+<p>The cursor blink period is controlled by a hard-coded value in &#39;Resources/app/src/cursor-view.js&#39; inside the app package (right click Atom.app, &#39;Show Package Contents&#39;).</p>
+
+<p>The culprit is on line 27:</p>
+<div class="highlight"><pre><code class="js language-js" data-lang="js"><span class="nx">CursorView</span><span class="p">.</span><span class="nx">blinkPeriod</span> <span class="o">=</span> <span class="mi">800</span><span class="p">;</span>
+</code></pre></div>
+<p>This sets the cursor to complete a full blink cycle every 800ms. The OSX default blink period is 1000ms. Apparently that .2s difference is just enough to drive me absolutely crazy.</p>
+
+<p>As of this writing, I haven&#39;t found a good way to configure this value without editing the app&#39;s source. Atom has a nice Sublime-esque JSON configuration file, but according to the <a href="https://atom.io/docs/v0.59.0/customizing-atom#configuration-key-reference">documentation</a>, there isn&#39;t a key to control the cursor blink rate yet. For now, I&#39;ve just edited <code>cursor-view.js</code> to set the blinkPeriod to 1000ms. This will get overwritten by any updates, but for now there doesn&#39;t seem to be a better way to modify the blink behavior.</p>
+
+<p>I also added the following snippet to my <code>styles.less</code> file for a slight fade transition on the cursor (just like Sublime):</p>
+<div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.editor.is-focused</span> <span class="nc">.cursor</span> <span class="p">{</span>
+  <span class="n">transition</span><span class="o">:</span> <span class="k">opacity</span> <span class="m">.2s</span><span class="p">;</span>
+  <span class="o">&amp;.</span><span class="k">blink</span><span class="o">-</span><span class="n">off</span> <span class="err">{</span>
+      <span class="k">visibility</span><span class="o">:</span> <span class="k">visible</span><span class="p">;</span>
+      <span class="k">opacity</span><span class="o">:</span> <span class="m">0</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="err">}</span>
+</code></pre></div>
+<h1>4. Tab Close Icons</h1>
+
+<p>The last thing that bugged me about the default theme in Atom was the tab close buttons for modified &amp; unsaved files. They show up as an electric blue outlined circle, which kinda ruins the whole subdued monochromatic thing the theme has going.</p>
+
+<p><img src="/images/atom-initial-impressions/closebutton-default.png" alt="atom default theme">
+<span class='caption'>Atom default modified close button</span></p>
+
+<p><img src="/images/atom-initial-impressions/closebutton-modified.png" alt="monokai soda theme">
+<span class='caption'>My edit</span></p>
+
+<p>I opted to change them to filled-in circles which match the tab title text color, (again, similar to Sublime). Here&#39;s the <code>styles.less</code> snippet:</p>
+<div class="highlight"><pre><code class="css language-css" data-lang="css"><span class="nc">.tab-bar</span> <span class="nc">.tab.modified</span><span class="nd">:not</span><span class="o">(</span><span class="nd">:hover</span><span class="o">)</span> <span class="nc">.close-icon</span> <span class="p">{</span>
+  <span class="k">border</span><span class="o">:</span> <span class="m">4px</span> <span class="k">solid</span> <span class="m">#AAA</span><span class="p">;</span>
+  <span class="k">border</span><span class="o">-</span><span class="n">radius</span><span class="o">:</span> <span class="m">12px</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="nc">.tab-bar</span> <span class="nc">.tab.modified</span><span class="nd">:hover</span> <span class="nc">.close-icon</span> <span class="p">{</span>
+  <span class="k">color</span><span class="o">:</span> <span class="k">inherit</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<h1>Conclusion</h1>
+
+<p>As of right now, I&#39;m very impressed with Atom. It&#39;s the most polished HTML/CSS/JS desktop app that I&#39;ve ever used, and it&#39;s fantastically hackable. As a web developer who does a lot of front-end work, being able to use LESS and Javascript to hack on my text editor is something of a dream come true, and as someone who uses git for all of my projects the git/GitHub integration is really nice to have.</p>
+
+<p>There&#39;s definitely some room for improvement (Atom&#39;s soft line wrapping bugged out while I was writing this post, for example), but overall I think that Atom just might become my new favorite editor.</p>

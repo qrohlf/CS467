@@ -1,0 +1,40 @@
+<p>Mischief is an important human tendency. From Arthur C. Clarke&#39;s fictional utopia of Diaspar to the royal courts of medieval times, pranksters have always played an important role in society. I myself firmly believe that April Fools&#39; day is an excellent time to tap into some creativity and to come up with ways to make people laugh. In that spirit, I&#39;d like to share a couple of my own creations:</p>
+
+<h1>1. Git <em>Push It</em></h1>
+
+<p><em>inspired by <a href="https://twitter.com/codinghorror/status/21559239552">this tweet</a></em></p>
+
+<p>Sometimes, you have a coworker whose git commit messages are just missing that extra something. Here&#39;s the fix:</p>
+
+<p>In your colleague&#39;s git repo, create a commit-msg hook in <code>.git/hooks/commit-msg</code> with the following contents:</p>
+<div class="highlight"><pre><code class="bash language-bash" data-lang="bash"><span class="c">#!/bin/sh</span>
+<span class="nb">echo</span> <span class="s2">&quot;http://www.youtube.com/watch?v=vCadcBR95oU&quot;</span> &gt;&gt; <span class="s2">&quot;$1&quot;</span>
+</code></pre></div>
+<p>Now all you need to do is <code>chmod +x .git/hooks/commit-msg</code> and enjoy the fun.</p>
+
+<h1>2. Remote-Activated ASCII Star Wars</h1>
+
+<p>Say you want to watch Star Wars... but you&#39;re doing some important work on your machine. Why not use your coworker&#39;s mac to watch it? </p>
+
+<p><strong>The following conditions need to be true for this to work:</strong></p>
+
+<ul>
+<li>The target machine must be running OSX</li>
+<li>A user account must be logged in on the target machine</li>
+<li>you must be able to ssh into the target machine as the currently logged-in user</li>
+</ul>
+
+<p>To pull it off, ssh into the target and create a <code>starwars.applescript</code> file somewhere with the following contents:</p>
+<div class="highlight"><pre><code class="applescript language-applescript" data-lang="applescript"><span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;Terminal&quot;</span> <span class="k">to</span> <span class="nb">activate</span>
+
+<span class="k">tell</span> <span class="nb">application</span> <span class="s2">&quot;System Events&quot;</span>
+    <span class="nv">keystroke</span> <span class="s2">&quot;telnet&quot;</span>
+    <span class="nv">keystroke</span> <span class="no">space</span>
+    <span class="nv">keystroke</span> <span class="s2">&quot;towel.blinkenlights.nl&quot;</span>
+    <span class="nv">keystroke</span> <span class="no">return</span>
+<span class="k">end</span> <span class="k">tell</span>
+</code></pre></div>
+<p>Then simply run the script with:</p>
+<div class="highlight"><pre><code class="bash language-bash" data-lang="bash">osascript starwars.applescript
+</code></pre></div>
+<p>May the force be with you!</p>

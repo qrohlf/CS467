@@ -1,0 +1,41 @@
+<p>I recently needed to plot some polar data for a project at work, and the data happened to be 3-dimensional. In addition to the standard rotation and radius, it had a third dimension that corresponded to a strength metric. Unfortunately, <em>Mathematica</em> (my tool of choice for data manipulation and plotting) lacks native support for 3D plotting in the polar coordinate system. It does, however, have excellent support for list/matrix manipulation, so I was able to put together this one-liner to produce a 3D plot from a <code>N x 3</code> matrix of <code>θ, r, h</code> coordinates:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">ListPolarPlot3D[data_, opts___] := Module[{polarConvert}, polarConvert[coords_] := {coords[[2]]*Cos[coords[[1]] Degree], coords[[2]]*Sin[coords[[1]] Degree], coords[[3]]}; ListPlot3D[Map[polarConvert, data], Evaluate[opts]]]
+</code></pre></div>
+<p>After pasting that into your <em>Mathematica</em> notebook, you can easily generate 3D plots of polar coordinate data by calling <code>ListPolarPlot3D</code>. For example:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">ListPolarPlot3D[Table[{n, n/2, Sin[n*4 Degree]}, {n, 0, 1080}],  ColorFunction -&gt; &quot;RedBlueTones&quot;]
+</code></pre></div>
+<p>Gives you this:</p>
+
+<p><img src="/images/3D-Polar-ListPlots-in-Mathematica/exampleplot.png" alt="Example Polar Plot" class="bordered" /></p>
+
+<h1>Breakdown</h1>
+
+<p>Here&#39;s what each part of the snippet does:</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">ListPolarPlot3D[data_, opts___] := 
+</code></pre></div>
+<p>Define a function called <code>ListPolarPlot3D</code> that takes a variable number of arguments. Store the first argument in the <code>data</code> variable, and all the others in the <code>opts</code> variable. The triple-underscore means &quot;zero or more arguments&quot;.</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">Module[{polarConvert}, 
+</code></pre></div>
+<p>Create a local scope for the <code>polarConvert</code> function so that it doesn&#39;t interfere with anything in the global scope that might be called <code>polarConvert</code>.</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">polarConvert[coords_] := {coords[[2]]*Cos[coords[[1]] Degree], coords[[2]]*Sin[coords[[1]] Degree], coords[[3]]};
+</code></pre></div>
+<p>Use the identities <code>x = r × cos(θ)</code> and <code>y = r × sin(θ)</code> to convert the polar coordinates to Cartesian, and leave the <code>y</code> coordinate alone</p>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">ListPlot3D[Map[polarConvert, data], Evaluate[opts]]]
+</code></pre></div>
+<p>This does three things. <code>Map[polarConvert, data]</code> applies the polar coordinate conversion function to each coordinate in the data, then returns the converted dataset. <code>Evaluate[opts]</code> allows us to pass in a List of options to <code>ListPlot3D</code> bypassing the <code>HoldAll</code> attribute that <code>ListPlot3D</code> has by default. <code>ListPlot3D</code> takes the converted cartesian data and evaluated options and generates a 3D plot from them. The final closing bracket closes the <code>Module</code> and returns the <code>ListPlot3D</code>. </p>
+
+<h1>Modifications</h1>
+
+<p>It&#39;s pretty easy to tweak the snippet to suit your needs. Here are a couple of examples:</p>
+
+<h2>Use radians instead of degrees</h2>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">ListPolarPlot3D[data_, opts___] := Module[{polarConvert}, polarConvert[coords_] := {coords[[2]]*Cos[coords[[1]]], coords[[2]]*Sin[coords[[1]]], coords[[3]]}; ListPlot3D[Map[polarConvert, data], Evaluate[opts]]]
+</code></pre></div>
+<h2>Render the data as points rather than a surface</h2>
+<div class="highlight"><pre><code class="text language-text" data-lang="text">ListPolarPointPlot3D[data_, opts___] := Module[{polarConvert}, polarConvert[coords_] := {coords[[2]]*Cos[coords[[1]] Degree], coords[[2]]*Sin[coords[[1]] Degree], coords[[3]]}; ListPointPlot3D[Map[polarConvert, data], Evaluate[opts]]]
+</code></pre></div>
+<h1>Limitations</h1>
+
+<p>There are a few things to note when using this technique. First, <em>Mathematica</em> wants to automatically scale the axes by default. This can result in improperly displayed graphs if the scale for the <code>x</code> and <code>y</code> axes is different. I recommend setting your <code>xy</code> scale explicitly (i.e. <code>PlotRange -&gt; {{-10, 10}, {-10, 10}, Automatic})</code>). </p>
+
+<p>Second, you&#39;re going to have Cartesian axes displayed. Short of really digging into <em>Mathematica</em>&#39;s <code>Graphics3D</code> implementation, there&#39;s really no good way around this as the way that the whole technique works is by mapping the polar data into the Cartesian plane.</p>
