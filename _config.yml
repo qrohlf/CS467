@@ -1,8 +1,8 @@
-name: Simplify
+name: Transhumanism
 markdown: redcarpet
 highlighter: pygments
-description: "hey look, it's a jekyll theme"
-baseurl: ''
+description: "The Singularity is Weird"
+baseurl: '/hplus'
 tracking_id: UA-40241848-1
 tracking_property: qrohlf.com
-github_repo: qrohlf/simplify
+github_repo: qrohlf/hplus

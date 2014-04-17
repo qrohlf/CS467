@@ -1,5 +1,6 @@
 /* =Syntax Highlighting
 ---------------------------------*/
+@import url(../bower_components/icomoon/style.css);
 .highlight .c {
   color: #999988;
   font-style: italic; }
@@ -5259,6 +5260,9 @@ img {
         margin-left: auto;
         margin-right: auto; } }
 
+#history .icomoon {
+  font-size: 32px; }
+
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
@@ -5267,8 +5271,8 @@ html {
 
 header {
   color: white;
-  background-color: #bc370d;
-  background-image: url(../images/background-header.jpg);
+  background-color: #3dadd1;
+  background-image: url(../images/background-header.svg);
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;

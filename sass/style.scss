@@ -1,15 +1,16 @@
 @import "pygments";
 // Reference bootstrap variables
 @import "../bower_components/bootstrap-sass-official/vendor/assets/stylesheets/bootstrap/variables";
+@import "../bower_components/icomoon/style.css";
 // variable overrides
 $palette-1: #F0511F;
 $palette-2: #FFA52A;
 $palette-3: #FFD92D;
 $palette-4: #47B6FF;
 $palette-5: #2D85D3;
-$header-background: #BC370D;
+$header-background: #3DADD1;
 
-$font-family-sans-serif: 'Open Sans', sans-serif;
+$font-family-sans-serif: open-sans, sans-serif;
 $headings-font-weight: 600;
 $line-height-base: 1.45;
 $line-height-computed: 2*14px;
@@ -65,6 +66,12 @@ img {
   z-index: 99;
 }
 
+#history {
+  .icomoon {
+    font-size: 32px;
+  }
+}
+
 /* Sticky footer styles
 -------------------------------------------------- */
 html {
@@ -75,7 +82,7 @@ html {
 header {
   color: white;
   background-color: $header-background;
-  background-image: url(../images/background-header.jpg);
+  background-image: url(../images/background-header.svg);
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
