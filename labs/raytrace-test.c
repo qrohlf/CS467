@@ -37,6 +37,25 @@ double solve (double a, double b, double c) {
     return fmax(i, j);
 }
 
+void normal_in_eyespace(double normal[3], double obj_mat_inv[4][4]) {
+    double W[4][4], U[3][3], tmp[3];
+    D3d_mat_mult(W, obj_mat_inv, VIEW_INV);
+    for(int i=0; i<3; i++) {
+        for (int j=0; j<3; j++) {
+            U[j][i] = W[i][j];
+        }
+    }
+    for (int i=0; i<3; i++) {
+        tmp[i] = normal[0]*U[i][0]
+            + normal[1]*U[i][1]
+            + normal[2]*U[i][2];
+    }
+    normal[0] = tmp[0];
+    normal[1] = tmp[1];
+    normal[2] = tmp[2];
+
+}
+
 void render_pixel(double row, double col) {
     double p_world[3], p_object[3];
     double origin_world[3], origin_object[3];
@@ -75,8 +94,8 @@ void render_pixel(double row, double col) {
     double obj_mat[4][4], obj_inv[4][4];
     D3d_make_identity(obj_mat);
     D3d_make_identity(obj_inv);
-    D3d_scale(obj_mat, obj_inv, 10, 10, 10);
-    D3d_translate(obj_mat, obj_inv, 0, 0, 100);
+    D3d_scale(obj_mat, obj_inv, 5, 5, 5);
+    D3d_translate(obj_mat, obj_inv, 5, 0, 15);
 
     // get the object point and object origin for a screen pixel
     D3d_mat_mult_pt(p_object, obj_inv, p_world);
@@ -121,7 +140,8 @@ void render_pixel(double row, double col) {
         double t = solve(a,b,c);
         double p[3] = {t*p_eye[0], t*p_eye[1], t*p_eye[2]}; // point in eyespace
         double n[3] = {t*p_object[0], t*p_object[1], t*p_object[2]}; // intersection point of object is also the normal vector for spheres
-        double irgb[3] = {0, 1, 1};     // Inherent color of object
+        normal_in_eyespace(n, obj_inv);
+        double irgb[3] = {0, 0, 1};     // Inherent color of object
         double argb[3];                 // Actual color of object
         double s[3] = {0, 0, 0};        // "s = location of start of ray"
         D3d_mat_mult_pt(n, obj_mat, n);
@@ -150,8 +170,8 @@ int main(int argc, char const *argv[]) {
     //Constants
     AMBIENT  = 0.2 ;
     MAX_DIFFUSE = 0.5 ;
-    SPECPOW = 100 ;
-    fov = 25 * M_PI/180;
+    SPECPOW = 500 ;
+    fov = 50 * M_PI/180;
     double eye[3] = {0, 0, 0};
     double coi[3] = {0, 0, 1};
     double up[3] = {0, 1, 0};

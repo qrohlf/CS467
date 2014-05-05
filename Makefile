@@ -10,6 +10,9 @@ lab2-movie: lab2 movieplayer
 lab2.1:
 	acom -std=c99 -Ilib labs/lab2.1.c lib/D3d_matrix_student.c lib/vectors.c lib/light_model_student.c -o bin/lab2.1
 
+final-project:
+	acom -std=c99 -Ilib labs/final-project.c lib/D3d_matrix_student.c lib/vectors.c lib/light_model_student.c -o bin/final-project
+
 frames=10
 lab2.1-movie: lab2.1 movieplayer
 	labs/lab2.1-par.sh $(frames) && printf "lab21-mov\n0\n$(frames)\n" | bin/movieplayer
@@ -22,6 +25,9 @@ raytrace-test:
 
 movieplayer:
 	acom examples/play_simple_movie_example.c -o bin/movieplayer
+
+smash:
+	acom -std=c99 -Ilib labs/smash.c lib/xwd_tools.c -o bin/smash
 
 all: lab1 lab2 movieplayer
 
