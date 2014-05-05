@@ -1,25 +1,28 @@
-#include <FPT.h>
 #include <pi.h>
 #include <D3d_matrix.h>
 #include <limits.h>
 #include <vectors.h>
 #include <light_model_student.h>
+#include <time.h>
+#include "xwd_tools.h"
 
 
-#define WIDTH 600
-#define HEIGHT 600
+#define WIDTH 900
+#define HEIGHT 900
 // Globals
-double Z_BUF[600][600];
+double Z_BUF[WIDTH][HEIGHT];
 double VIEW[4][4], VIEW_INV[4][4];
 double fov;
 double R, G, B;
+double seed;
+int MAP;
 
 // test value: .03
-// render value: .003
-double hyperboloid_interval = .0025;
+// render value: .0025
+double hyperboloid_interval = .01;
 // test value: .05
 // render value: .005
-double sphere_interval = .005;
+double sphere_interval = .04;
 
 
 // Equation for a sphere
@@ -27,6 +30,10 @@ void sphere(double p[3], double u, double v) {
     p[0] = cos(u)*cos(v);
     p[1] = sin(u);
     p[2] = cos(u)*sin(v);
+}
+
+void point(int x, int y) {
+    set_xwd_map_color(MAP, x, y, R, G, B);
 }
 
 void hyperboloid(double p[3], double u, double v) {
@@ -64,13 +71,16 @@ void set_color(double a, double b, double c) {
     R = a;
     G = b;
     B = c;
-    G_rgb(R, G, B);
 }
 
 // flatten a 3d point into a 2d representation
 void flatten(double p[3]) {
     p[0] = p[0]*(0.5*WIDTH/tan(fov))/p[2] + 0.5*WIDTH;
     p[1] = p[1]*(0.5*WIDTH/tan(fov))/p[2] + 0.5*WIDTH;
+}
+
+double rand_in(double a, double b) {
+    return a+(b-a)*(double)rand()/(double)RAND_MAX;
 }
 
 void graph(
@@ -87,18 +97,19 @@ void graph(
     double s[3] = {0, 0, 0};        // "s = location of start of ray"
     double n[3];                    // normal vector
     for (double u=u0; u<uf; u+=interval) {
+        double u_rand = rand_in(u, u+interval);
         for (double v= v0; v<vf; v+=interval) {
-            (*func)(p, u, v);
+            double v_rand = rand_in(v, v+interval);
+            (*func)(p, u_rand, v_rand);
             D3d_mat_mult_pt(p, m, p);
-            normal(func, m, u, v, n);
+            normal(func, m, u_rand, v_rand, n);
             nu_light_model(irgb, s, p, n, argb);
-            G_rgb(argb[0], argb[1], argb[2]);
 
             // printf("point: %f %f %f -> ", p[0], p[1], p[2]);
             flatten(p);
             // printf("%d %d\n", (int)p[0], (int)p[1]);
             // check the z-buffer
-            if (p[0] >= 600 || p[0] < 0 || p[1] >= 600 || p[1] < 0) {
+            if (p[0] >= WIDTH || p[0] < 0 || p[1] >= HEIGHT || p[1] < 0) {
                 // printf("point out of bounds\n");
                 continue;
             }
@@ -106,7 +117,9 @@ void graph(
                 // update the z-buffer
                 Z_BUF[(int)p[0]][(int)p[1]] = p[2]; 
                 // draw stuff
-                G_point(p[0], p[1]);
+                set_color(argb[0], argb[1], argb[2]);
+                point(p[0], p[1]);
+                set_color(irgb[0], irgb[1], irgb[2]);
             };
         }
     }
@@ -130,7 +143,7 @@ void sphere_at(double p[3], double r) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(sphere, m, sphere_interval, 0, M_PI*2.0, -M_PI/2.0, M_PI/2.0);
+    graph(sphere, m, sphere_interval, 0.0+seed, M_PI*2.0, -M_PI/2.0, M_PI/2.0);
 }
 
 // hyperboloid at point p
@@ -164,7 +177,7 @@ void hyp_base(double p[3], double length, double rz, double ry) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(hyperboloid, m, hyperboloid_interval, -1, 1, 0, M_PI*2.0);
+    graph(hyperboloid, m, hyperboloid_interval, -1+seed, 1, 0, M_PI*2.0);
 }
 
 void hyp_top(double length, double ry, double rz) {
@@ -199,7 +212,7 @@ void hyp_top(double length, double ry, double rz) {
     D3d_make_movement_sequence_matrix(m, m_inv, n, type, value);
     D3d_mat_mult(m, VIEW, m);
 
-    graph(hyperboloid, m, hyperboloid_interval, -1, 1, 0, M_PI*2.0);
+    graph(hyperboloid, m, hyperboloid_interval, -1+seed, 1, 0, M_PI*2.0);
 }
 
 void render() {
@@ -208,7 +221,6 @@ void render() {
     // 0. Black background
     // ################################
     set_color(0, 0, 0);
-    G_clear();
 
     // ################################
     // 1. Set the view matrix
@@ -310,8 +322,8 @@ void render() {
 }
 
 void init_zbuf() {
-    for (int x=0; x<600; x++) {
-        for (int y=0; y<600; y++) {
+    for (int x=0; x<WIDTH; x++) {
+        for (int y=0; y<HEIGHT; y++) {
             Z_BUF[x][y] = 9999999999999;
         }
     }
@@ -325,24 +337,25 @@ int main(int argc, char const *argv[]) {
 
     //Read the frame number from argv
     start = atoi(argv[1]); 
-    end = start;
+    end = atoi(argv[2]);
 
     //Initialize the Z-buffer
     init_zbuf();
 
     //Initialize the graphics
-    G_init_graphics(600, 600);    
-
+    MAP = create_new_xwd_map(WIDTH, HEIGHT);    
+    srand(time(NULL)); //I'm an idiot
     for (int i=start; i<=end; i++) {
         printf("rendering frame %d...\n", i);
         // Render the image
-        render(i);
+        seed = 0;//((rand() % 100) - 50)/1000.0;
+        printf("seed: %f\n", seed);
+        render();
         printf("done rendering frame %d\n", i);
 
         // Save the image
         sprintf(sequence_name, "%04d.xwd", i) ;
-        G_save_image_to_file(sequence_name) ;
+        xwd_map_to_named_xwd_file(MAP, sequence_name) ;
     }
-    G_close() ;
     return 0;
 }
